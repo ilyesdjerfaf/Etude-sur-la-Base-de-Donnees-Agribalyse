@@ -38,53 +38,27 @@ def dist_centroides(X,Y):
 def initialise_CHA(data):
     return {i: [i] for i in range(len(data))}
 
-# def fusionne(dataframe, P0, verbose = False):
-#     distances = {}
-#     for i in P0:
-#         j = i+1
-#         for j in P0:
-#             if i < j:
-#                 distances[(i,j)] = dist_centroides(dataframe.iloc[P0[i]],dataframe.iloc[P0[j]])
-#     # on cherche le couple (i,j) qui correspond à la plus petite distance:
-#     min_dist = min(distances.values())
-#     for couple in distances:
-#         if distances[couple] == min_dist:
-#             cle_1,cle_2 = couple
-#             break
-#     # on fusionne les clusters i et j de P0:
-#     P1 = P0.copy()
-#     P1[i+1] = P0[cle_1] + P0[cle_2]
-#     del P1[cle_1]
-#     del P1[cle_2]
-#     # on affiche le résultat si verbose = True
-#     if verbose:
-#         print(f"Distance mininimale trouvée entre  [{cle_1}, {cle_2}] : {min_dist}")
-#     return P1, cle_1, cle_2, min_dist
-
-
-def fusionne(dataframe, P0, verbose=False):
-    # Calcul des distances entre tous les clusters
-    centroides = np.array([centroide(dataframe.iloc[P0[i]]) for i in P0])
-    dist_matrix = cdist(centroides, centroides, metric='euclidean')
-
-    # Trouver l'indice du couple avec la plus petite distance
-    indices_min = np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
-    i, j = indices_min[0], indices_min[1]
-    cle_1, cle_2 = P0[i], P0[j]
-
-    # Fusionner les clusters i et j de P0
+def fusionne(dataframe, P0, verbose = False):
+    distances = {}
+    for i in P0:
+        j = i+1
+        for j in P0:
+            if i < j:
+                distances[(i,j)] = dist_centroides(dataframe.iloc[P0[i]],dataframe.iloc[P0[j]])
+    # on cherche le couple (i,j) qui correspond à la plus petite distance:
+    min_dist = min(distances.values())
+    for couple in distances:
+        if distances[couple] == min_dist:
+            cle_1,cle_2 = couple
+            break
+    # on fusionne les clusters i et j de P0:
     P1 = P0.copy()
-    P1[i] = P0[cle_1] + P0[cle_2]
-    del P1[j]
-
-    # Calcul de la distance minimale
-    min_dist = dist_matrix[indices_min]
-
-    # Affichage du résultat si verbose=True
+    P1[i+1] = P0[cle_1] + P0[cle_2]
+    del P1[cle_1]
+    del P1[cle_2]
+    # on affiche le résultat si verbose = True
     if verbose:
-        print(
-            f"Distance minimale trouvée entre [{cle_1}, {cle_2}]: {min_dist}")
-
+        print(f"Distance mininimale trouvée entre  [{cle_1}, {cle_2}] : {min_dist}")
     return P1, cle_1, cle_2, min_dist
 
 
@@ -304,10 +278,14 @@ def index_Dunn(Base, U):
 def index_Xie_Beni(Base, U):
     return inertie_globale(Base, U) / semin(Base, U)
 
-def affiche_resultat(Base,Centres,Affect):
-    couleurs = ["b","g","c","m","y","k","w"]
-    plt.scatter(Centres[:,0],Centres[:,1],color='r',marker='x')
-    for elem in Affect.values():
-        c=np.random.choice(couleurs)
-        for i in elem:
-            plt.scatter(Base.iloc[i,0],Base.iloc[i,1],color=c)
+
+def affiche_resultat(Base, Centres, Affect):
+    couleurs = cm.tab20(np.linspace(0, 1, len(Centres)))
+
+    # Affichage des points de chaque cluster
+    for i in range(len(Centres)):
+        plt.scatter(Base.iloc[Affect[i], 0],
+                    Base.iloc[Affect[i], 1], color=couleurs[i])
+
+    # Affichage des centres de cluster en rouge avec un marqueur 'x'
+    plt.scatter(Centres[:, 0], Centres[:, 1], color='r', marker='x')
